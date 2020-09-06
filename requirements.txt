@@ -1,0 +1,7 @@
+six==1.12.0
+virtualenv==16.2.0
+tensorflow==2.3.0
+seaborn==0.10.1
+pandas==1.1.1
+numpy==1.18.5
+matplotlib==3.3.1

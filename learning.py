@@ -4,14 +4,15 @@ from tensorflow.keras import layers
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+from datetime import datetime
 
 
 class PrintDot(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs):
-        print(epoch, logs)
+        print(datetime.now(), epoch, logs)
 
 
-column_names = ['high', 'low', 'open', 'close', 'volume', 'price_up']
+column_names = ['high', 'low', 'open', 'close', 'volume', 'price_up_rate']
 
 
 def learning():
@@ -22,12 +23,12 @@ def learning():
     train_dataset = dataset.sample(frac=0.8, random_state=0)
     test_dataset = dataset.drop(train_dataset.index)
 
-    train_labels = train_dataset.pop('price_up')
-    test_labels = test_dataset.pop('price_up')
+    train_labels = train_dataset.pop('price_up_rate')
+    test_labels = test_dataset.pop('price_up_rate')
 
     model = keras.Sequential([
-        layers.Dense(12, activation='relu', input_shape=[len(train_dataset.keys())]),
-        layers.Dense(6, activation='relu'),
+        layers.Dense(5, activation='relu', input_shape=[len(train_dataset.keys())]),
+        layers.Dense(120, activation='relu'),
         layers.Dense(1)
     ])
 
@@ -39,8 +40,13 @@ def learning():
 
     history = model.fit(
         train_dataset, train_labels,
-        epochs=50, validation_split=0.2, verbose=0,
+        epochs=10, validation_split=0.3, verbose=1,
+        batch_size=len(train_dataset),
         callbacks=[PrintDot()])
+
+    loss, mae, mse = model.evaluate(test_dataset, test_labels, verbose=1)
+
+    print('test : ', loss, mae, mse)
 
     plot_history(history)
 
@@ -58,7 +64,7 @@ def plot_history(history):
              label='Train Error')
     plt.plot(hist['epoch'], hist['val_mae'],
              label='Val Error')
-    plt.ylim([0, 5])
+    plt.ylim([0, 15])
     plt.legend()
 
     plt.subplot(2, 1, 2)
@@ -68,7 +74,7 @@ def plot_history(history):
              label='Train Error')
     plt.plot(hist['epoch'], hist['val_mse'],
              label='Val Error')
-    plt.ylim([0, 20])
+    plt.ylim([0, 15])
     plt.legend()
     plt.show()
 
@@ -77,8 +83,8 @@ def show_relation():
     raw_dataset = pd.read_csv("preprocessed_data/train_data.csv",
                               names=column_names,
                               skipinitialspace=True)
-    train_dataset = raw_dataset.sample(frac=0.8, random_state=0)
-    sns.pairplot(train_dataset[['close', 'volume']], diag_kind="kde")
+    train_dataset = raw_dataset.sample(frac=0.005, random_state=0)
+    sns.pairplot(train_dataset[['high', 'low', 'open', 'close', 'volume', 'price_up_rate']], diag_kind="kde")
     plt.show()
 
 
